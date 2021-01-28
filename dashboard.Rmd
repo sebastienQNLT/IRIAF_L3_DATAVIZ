@@ -1,0 +1,67 @@
+---
+title: "Tweets Lupin"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: row
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+
+#https://rmarkdown.rstudio.com/flexdashboard/index.html
+#https://fontawesome.com/
+
+library(flexdashboard)
+library(dplyr)
+library(lubridate)
+library(plotly)
+library(wordcloud)
+
+
+tweets.with.sentiment<-readRDS("../../my_tweets.rds")
+(tweets<-tweets.with.sentiment %>% count)
+(likes<-tweets.with.sentiment %>% summarize(s=sum(favorite_count)))
+(twittos<-tweets.with.sentiment %>% summarize(n=n_distinct(screen_name)))
+```
+
+Row
+-----------------------------------------------------------------------
+
+### tweets
+
+```{r}
+valueBox(tweets,caption="tweets", icon = "fa-twitter")
+```
+
+### likes
+
+```{r}
+valueBox(likes, caption="likes",icon = "fa-heart")
+```
+
+### likes
+
+```{r}
+valueBox(twittos, caption="users",icon = "fa-user")
+```
+
+Row
+-----------------------------------------------------------------------
+### Chart 1
+```{r}
+(fig <- tweets.with.sentiment %>%
+    mutate(date.hour=round_date(created_at,"hour")) %>%
+    group_by(date.hour) %>% summarise(n.tweets=n()) %>%
+  plot_ly(x = ~date.hour, y = ~n.tweets, mode = 'lines'))
+```
+
+### Chart 2
+```{r}
+(fig <- tweets.with.sentiment %>%
+    mutate(date.hour=round_date(created_at,"hour")) %>%
+    group_by(date.hour,polarity_level) %>% summarise(n.polarity=n()) %>%
+    plot_ly(x = ~date.hour, y = ~n.polarity,color=~polarity_level, type = 'bar')) %>%
+  layout(barmode = 'stack')
+```
+
+
